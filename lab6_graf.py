@@ -8,7 +8,7 @@
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import numpy as np
 import matplotlib
 # Используем TkAgg бэкенд для интеграции Matplotlib в окно Tkinter
@@ -183,7 +183,10 @@ class PlotAnalyzerApp:
         # Добавление навигационной панели (для масштабирования и перемещения)
         self.toolbar = NavigationToolbar2Tk(self.canvas, right_frame)
         self.toolbar.update()
-        
+
+        btn_save_plot = ttk.Button(right_frame, text="Сохранить график в PNG", command=self.save_plot)
+        btn_save_plot.pack(side=tk.BOTTOM, fill=tk.X, padx=6, pady=6)
+
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     # --- МАТЕМАТИЧЕСКАЯ ЛОГИКА ОЦЕНКИ ФУНКЦИЙ ---
@@ -472,6 +475,21 @@ class PlotAnalyzerApp:
         self.plot_graphs(highlight_pair_roots=(g1, g2, roots))
 
     # --- ВИЗУАЛИЗАЦИЯ (ОТРИСОВКА В MATPLOTLIB) ---
+
+    def save_plot(self):
+        """Сохраняет текущую координатную область в PNG-файл."""
+        filename = filedialog.asksaveasfilename(
+            title="Сохранение графика",
+            defaultextension=".png",
+            filetypes=[("Изображение PNG", "*.png")]
+        )
+        if not filename:
+            return
+        try:
+            self.fig.savefig(filename, dpi=160, bbox_inches="tight")
+            messagebox.showinfo("Сохранение", "График успешно сохранён.")
+        except OSError as error:
+            messagebox.showerror("Ошибка сохранения", str(error))
 
     def plot_graphs(self, highlight_pair_roots=None):
         """Очищает и полностью перерисовывает координатную плоскость"""
