@@ -145,6 +145,9 @@ class PlotAnalyzerApp:
         btn_delete_graph = ttk.Button(btn_list_frame, text="Удалить выбранный", command=self.delete_graph)
         btn_delete_graph.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
 
+        btn_toggle_graph = ttk.Button(btn_list_frame, text="Показать/скрыть", command=self.toggle_graph_visibility)
+        btn_toggle_graph.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+
         btn_clear_graphs = ttk.Button(btn_list_frame, text="Очистить все", command=self.clear_graphs)
         btn_clear_graphs.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
         
@@ -378,6 +381,18 @@ class PlotAnalyzerApp:
         self.update_comboboxes_for_roots()
         self.plot_graphs()
 
+    def toggle_graph_visibility(self):
+        """Переключает отображение выбранной функции без её удаления."""
+        selected_index = self.graphs_listbox.curselection()
+        if not selected_index:
+            messagebox.showwarning("Внимание", "Выберите функцию в списке.")
+            return
+        graph = self.graphs[selected_index[0]]
+        graph["visible"] = not graph["visible"]
+        self.update_graphs_listbox()
+        self.update_comboboxes_for_roots()
+        self.plot_graphs()
+
     def clear_graphs(self):
         """Удаляет все функции после подтверждения пользователя."""
         if not self.graphs:
@@ -395,12 +410,13 @@ class PlotAnalyzerApp:
         """Обновляет текстовый список функций на экране"""
         self.graphs_listbox.delete(0, tk.END)
         for g in self.graphs:
-            display_text = f"F{g['id']}: {g['type'].split(' (')[0]} [A={g['A']}, B={g['B']}] — {g['color']}"
+            state = "✓" if g["visible"] else "○"
+            display_text = f"[{state}] F{g['id']}: {g['type'].split(' (')[0]} [A={g['A']}, B={g['B']}] — {g['color']}"
             self.graphs_listbox.insert(tk.END, display_text)
 
     def update_comboboxes_for_roots(self):
         """Обновляет элементы выбора пары графиков для вычисления корней"""
-        options = [f"F{g['id']}" for g in self.graphs]
+        options = [f"F{g['id']}" for g in self.graphs if g["visible"]]
         self.combo_f1["values"] = options
         self.combo_f2["values"] = options
         
@@ -512,6 +528,8 @@ class PlotAnalyzerApp:
         
         # Отрисовка всех активных функций
         for g in self.graphs:
+            if not g["visible"]:
+                continue
             y_pts = self.evaluate_function(g["type"], g["A"], g["B"], x_pts)
             
             # Маскируем невалидные точки (например, NaN для логарифма)
@@ -531,6 +549,8 @@ class PlotAnalyzerApp:
                 for j in range(i + 1, len(self.graphs)):
                     g1 = self.graphs[i]
                     g2 = self.graphs[j]
+                    if not g1["visible"] or not g2["visible"]:
+                        continue
                     pts = self.find_roots(g1, g2, x1, x2)
                     for px in pts:
                         py = self.evaluate_function_single(g1["type"], g1["A"], g1["B"], px)
