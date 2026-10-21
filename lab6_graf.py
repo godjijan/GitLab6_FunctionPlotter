@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Лабораторная работа №4. Построение и анализ графиков функций.
+Лабораторная работа №6. Построение и анализ графиков функций.
 Выполнил: Студент группы 25-ПИЭ Стаценко С.М.
 Проверил: проф. каф. инф. тех., д.т.н. Попов Д.И.
 """
@@ -19,7 +19,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 class PlotAnalyzerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Анализатор графиков функций — Лабораторная работа №4")
+        self.root.title("Анализатор графиков функций — Лабораторная работа №6")
         self.root.geometry("1200x800")
         self.root.minimum_size = (1000, 700)
         
@@ -298,23 +298,26 @@ class PlotAnalyzerApp:
 
     # --- ИНТЕРФЕЙСНЫЕ КОМАНДЫ ---
 
+    def parse_axis_limits(self):
+        """Читает и проверяет границы координатной области."""
+        values = [
+            float(self.entry_x1.get()), float(self.entry_x2.get()),
+            float(self.entry_y1.get()), float(self.entry_y2.get())
+        ]
+        if not all(np.isfinite(value) for value in values):
+            raise ValueError("Границы должны быть конечными числами.")
+        x1, x2, y1, y2 = values
+        if x1 >= x2 or y1 >= y2:
+            raise ValueError("Минимальная граница должна быть меньше максимальной.")
+        return x1, x2, y1, y2
+
     def update_limits(self):
-        """Применяет ручные настройки масштаба окна к осям"""
+        """Применяет проверенные настройки масштаба окна к осям."""
         try:
-            x1 = float(self.entry_x1.get())
-            x2 = float(self.entry_x2.get())
-            y1 = float(self.entry_y1.get())
-            y2 = float(self.entry_y2.get())
-            
-            if x1 >= x2 or y1 >= y2:
-                raise ValueError("Минимум должен быть меньше Максимума.")
-                
-            self.ax.set_xlim(x1, x2)
-            self.ax.set_ylim(y1, y2)
-            self.canvas.draw()
-            self.plot_graphs() # Пересчитываем сетку с новыми границами
-        except ValueError as e:
-            messagebox.showerror("Ошибка ввода", f"Некорректные числовые параметры границ:\n{e}")
+            self.parse_axis_limits()
+            self.plot_graphs()
+        except ValueError as error:
+            messagebox.showerror("Ошибка ввода", f"Некорректные границы:\n{error}")
 
     def add_graph(self):
         """Добавляет новый график функции в список на основе полей ввода"""
@@ -323,7 +326,10 @@ class PlotAnalyzerApp:
             A = float(self.entry_a.get())
             B = float(self.entry_b.get())
             color = self.color_select.get()
-            
+
+            if not np.isfinite(A) or not np.isfinite(B):
+                raise ValueError("Коэффициенты A и B должны быть конечными числами.")
+
             # Валидация
             if func_type == "y = A * ln(B * x) (Логарифм)" and B == 0:
                 raise ValueError("Для логарифма параметр B не должен быть равен 0.")
@@ -455,13 +461,10 @@ class PlotAnalyzerApp:
         """Очищает и полностью перерисовывает координатную плоскость"""
         self.ax.clear()
         
-        # Получаем границы окна отображения
+        # Получаем проверенные границы окна отображения
         try:
-            x1 = float(self.entry_x1.get())
-            x2 = float(self.entry_x2.get())
-            y1 = float(self.entry_y1.get())
-            y2 = float(self.entry_y2.get())
-        except:
+            x1, x2, y1, y2 = self.parse_axis_limits()
+        except ValueError:
             x1, x2, y1, y2 = -10, 10, -10, 10
             
         # Установка сетки и осей координат
