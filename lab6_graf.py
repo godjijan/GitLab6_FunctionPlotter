@@ -144,6 +144,9 @@ class PlotAnalyzerApp:
         
         btn_delete_graph = ttk.Button(btn_list_frame, text="Удалить выбранный", command=self.delete_graph)
         btn_delete_graph.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
+
+        btn_clear_graphs = ttk.Button(btn_list_frame, text="Очистить все", command=self.clear_graphs)
+        btn_clear_graphs.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=2)
         
         # 4. Вычисление корней уравнения F1(x) = F2(x) для выбранной пары
         roots_frame = ttk.LabelFrame(left_frame, text=" Вычисление корней F1(x) = F2(x) ")
@@ -368,6 +371,19 @@ class PlotAnalyzerApp:
         self.graphs.pop(idx)
         
         # Перерисовка и обновление выпадающих списков
+        self.update_graphs_listbox()
+        self.update_comboboxes_for_roots()
+        self.plot_graphs()
+
+    def clear_graphs(self):
+        """Удаляет все функции после подтверждения пользователя."""
+        if not self.graphs:
+            messagebox.showinfo("Список пуст", "Нет графиков для удаления.")
+            return
+        if not messagebox.askyesno("Подтверждение", "Удалить все добавленные графики?"):
+            return
+        self.graphs.clear()
+        self.graph_id_counter = 1
         self.update_graphs_listbox()
         self.update_comboboxes_for_roots()
         self.plot_graphs()
